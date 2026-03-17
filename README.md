@@ -59,7 +59,6 @@ pulumi config set digitalocean:token --secret "$DIGITALOCEAN_TOKEN"
 pulumi config set huggingface:token --secret "$HUGGINGFACE_TOKEN"
 pulumi up
 ```
- 
 ---
 
 ## 🔧 Customizing the model and droplet

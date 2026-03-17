@@ -53,7 +53,7 @@ jobs:
           # Ensure the DigitalOcean and Hugging Face tokens are set as secrets in Pulumi config.
           # These are required for the DigitalOcean provider and for downloading the model.
           pulumi config set digitalocean:token --secret "${{ secrets.DIGITALOCEAN_TOKEN }}"
-          pulumi config set huggingface:token --secret "${{ secrets.HUGGINGFACE_TOKEN }}"
+          pulumi config set slm-inference:huggingface:token --secret "${{ secrets.HUGGINGFACE_TOKEN }}"
 
       - name: Preview changes (pull requests)
         if: github.event_name == 'pull_request'
