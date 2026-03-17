@@ -87,7 +87,7 @@ try:
     print("[cloud-init] model download succeeded")
     raise SystemExit(0)
 except Exception as e:
-    print(f"[cloud-init] model download failed: {e}")
+    print(f"[cloud-init] model download failed")
     raise
 PY
       if [ $? -eq 0 ]; then
