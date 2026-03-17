@@ -27,8 +27,7 @@ RESIZE_DISK = False
 # -----------------------------------------------------------------------------
 config = pulumi.Config()
 HUGGINGFACE_TOKEN = config.require_secret("huggingfacetoken")
-MODEL_REPO = config.get("modelRepo") or "Qwen/qwen2.5-0.5b-instruct-q4_k_m"
-MODEL_FILE = config.get("modelFile") or "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+MODEL_REPO = "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
 
 # -----------------------------------------------------------------------------
 # Cloud-init script (runs on first boot)
@@ -42,82 +41,56 @@ MODEL_FILE = config.get("modelFile") or "qwen2.5-0.5b-instruct-q4_k_m.gguf"
 #   * The Hugging Face token is passed into the droplet via cloud-init.
 #   * `pulumi up` may take a while because the model download can be large.
 
-def make_user_data(hf_token: str, model_repo: str, model_file: str) -> str:
-    return """#cloud-config
+def make_user_data(hf_token: str, model_repo: str) -> str:
+    return f"""#cloud-config
 runcmd:
-  - echo "HELLO FROM CLOUD INIT" > /tmp/test.txt
+  - exec > /tmp/startup.log 2>&1
+  - set -x
+
   - apt update -y
-  - apt install -y docker.io
+  - apt install -y docker.io python3-pip
   - systemctl enable --now docker
+
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install huggingface-hub
+
+  # Create model directory
+  - mkdir -p /models
+
+  # Write Python script safely
+  - |
+    cat <<EOF > /tmp/download.py
+    from huggingface_hub import snapshot_download
+
+    snapshot_download(
+        repo_id="{model_repo}",
+        cache_dir="/models/model",
+        token="{hf_token}",
+        allow_patterns=["*q4_k_m.gguf"]
+    )
+
+    print("Download complete")
+    EOF
+
+  # Run download
+  - python3 /tmp/download.py
+
+  # Find model file
+  - MODEL_PATH=$(find /models/model -name "*.gguf" | head -n 1)
+  - echo "Model path: $MODEL_PATH"
+
+  # Run container
+  - docker pull ghcr.io/ggml-org/llama.cpp:server
+  - docker rm -f llama-server || true
+  - docker run --name llama-server --restart=always -d \
+      -v /models:/models \
+      -p 8080:8080 \
+      ghcr.io/ggml-org/llama.cpp:server \
+      -m $MODEL_PATH \
+      --host 0.0.0.0 --port 8080
 """
 
-# def make_user_data(hf_token: str, model_repo: str, model_file: str) -> str:
-#     return f"""#cloud-config
-# package_update: true
-# package_upgrade: true
-# packages:
-#   - apt-transport-https
-#   - ca-certificates
-#   - curl
-#   - gnupg
-#   - lsb-release
-#   - python3
-#   - python3-pip
-# runcmd:
-#   - |
-#     set -euo pipefail
-
-#     # Install Docker (if not already installed)
-#     if ! command -v docker >/dev/null; then
-#       curl -fsSL https://get.docker.com | sh
-#     fi
-#     systemctl enable --now docker
-
-#     # Install the Hugging Face client (used to download the model)
-#     python3 -m pip install --upgrade pip
-#     python3 -m pip install --no-cache-dir huggingface-hub
-
-#     mkdir -p /models
-#     chmod 755 /models
-
-#     # Download the model from Hugging Face (retries on failure)
-#     for attempt in $(seq 1 6); do
-#       echo "[cloud-init] downloading model (attempt $attempt)"
-#       python3 <<EOF
-# from huggingface_hub import snapshot_download
-
-# try:
-#     snapshot_download(
-#         repo_id={model_repo!r},
-#         cache_dir="/models/model",
-#         use_auth_token={hf_token!r},
-#         resume_download=True,
-#     )
-#     print("[cloud-init] model download succeeded")
-#     raise SystemExit(0)
-# except Exception as e:
-#     print(f"[cloud-init] model download failed")
-#     raise
-# PY
-#       if [ $? -eq 0 ]; then
-#         break
-#       fi
-#       echo "[cloud-init] retrying in 30s..."
-#       sleep 30
-#     done
-
-#     # Start the llama.cpp server
-#     docker pull ghcr.io/ggml-org/llama.cpp:server
-#     docker rm -f llama-server || true
-#     docker run --name llama-server --restart=always -d \
-#       -v /models/model:/models \
-#       -p 8080:8080 \
-#       ghcr.io/ggml-org/llama.cpp:server \
-#       -m /models/model/{model_file} \
-#       --port 8080 --host 0.0.0.0 -n 1024
-# """
-
-user_data = pulumi.Output.all(HUGGINGFACE_TOKEN, MODEL_REPO, MODEL_FILE).apply(
+user_data = pulumi.Output.all(HUGGINGFACE_TOKEN, MODEL_REPO).apply(
     lambda args: make_user_data(*args)
 )
 
