@@ -26,7 +26,7 @@ RESIZE_DISK = False
 # Pulumi config (expects secrets for tokens)
 # -----------------------------------------------------------------------------
 config = pulumi.Config()
-HUGGINGFACE_TOKEN = config.require_secret("huggingface:token")
+HUGGINGFACE_TOKEN = config.require_secret("huggingfacetoken")
 MODEL_REPO = config.get("modelRepo") or "Qwen/qwen2.5-0.5b-instruct-q4_k_m"
 MODEL_FILE = config.get("modelFile") or "qwen2.5-0.5b-instruct-q4_k_m.gguf"
 
