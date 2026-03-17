@@ -1,0 +1,10 @@
+[project]
+name = "digital-ocean"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pulumi>=3.226.0",
+    "pulumi-digitalocean>=4.61.0",
+]

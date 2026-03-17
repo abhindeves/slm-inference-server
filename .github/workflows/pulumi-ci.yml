@@ -1,0 +1,68 @@
+name: Pulumi CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  # The Pulumi stack name to deploy. Change as needed.
+  PULUMI_STACK: dev
+  # The directory containing Pulumi program (where Pulumi.yaml lives).
+  PULUMI_CWD: infra
+
+jobs:
+  deploy:
+    name: Pulumi deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r infra/requirements.txt
+
+      - name: Login to Pulumi service
+        run: pulumi login
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Select or create stack
+        working-directory: infra
+        run: |
+          pulumi stack select "$PULUMI_STACK" || pulumi stack init "$PULUMI_STACK"
+
+      - name: Configure stack secrets
+        working-directory: infra
+        run: |
+          # Ensure the DigitalOcean and Hugging Face tokens are set as secrets in Pulumi config.
+          # These are required for the DigitalOcean provider and for downloading the model.
+          pulumi config set digitalocean:token --secret "${{ secrets.DIGITALOCEAN_TOKEN }}"
+          pulumi config set huggingface:token --secret "${{ secrets.HUGGINGFACE_TOKEN }}"
+
+      - name: Preview changes (pull requests)
+        if: github.event_name == 'pull_request'
+        working-directory: infra
+        run: |
+          pulumi preview --diff
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+
+      - name: Apply changes (main branch)
+        if: github.event_name == 'push'
+        working-directory: infra
+        run: |
+          pulumi up --yes
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
