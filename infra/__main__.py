@@ -14,7 +14,7 @@ import pulumi_digitalocean as digitalocean
 # -----------------------------------------------------------------------------
 DROPLET_NAME = "pulumi-slm-droplet"
 REGION = "blr1"             # e.g., nyc3, blr1
-SIZE = "s-2vcpu-4gb"         # e.g., s-1vcpu-1gb, s-2vcpu-2gb
+SIZE = "s-2vcpu-2gb"         # e.g., s-1vcpu-1gb, s-2vcpu-2gb
 IMAGE = "ubuntu-24-04-x64"      # e.g., ubuntu-22-04-x64, docker-20-04
 TAGS = ["pulumi", "env:dev", "service:web"]
 ENABLE_IPV6 = True
