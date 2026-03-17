@@ -74,3 +74,6 @@ pulumi config set modelFile "<filename>.gguf"
 If you need to change the droplet size, region, or tags, edit `infra/__main__.py`.
 
   
+
+
+  

@@ -41,7 +41,7 @@ jobs:
         uses: pulumi/auth-actions@v1
         with:
           organization: abhindev-es-gmail-com
-          requested-token-type: urn:pulumi:token-type:access_token:organization
+          requested-token-type: urn:pulumi:token-type:access_token
 
       - name: Select or create stack
         working-directory: infra
