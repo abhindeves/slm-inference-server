@@ -13,7 +13,7 @@ import pulumi_digitalocean as digitalocean
 # Parameters (hard-coded for an out-of-the-box run; adjust as desired)
 # -----------------------------------------------------------------------------
 DROPLET_NAME = "pulumi-slm-droplet"
-REGION = "blr1"             # e.g., nyc3, fra1, blr1
+REGION = "blr1"             # e.g., nyc3, blr1
 SIZE = "s-2vcpu-4gb"         # e.g., s-1vcpu-1gb, s-2vcpu-2gb
 IMAGE = "ubuntu-24-04-x64"      # e.g., ubuntu-22-04-x64, docker-20-04
 TAGS = ["pulumi", "env:dev", "service:web"]
