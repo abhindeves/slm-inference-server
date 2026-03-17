@@ -20,7 +20,7 @@ TAGS = ["pulumi", "env:dev", "service:web"]
 ENABLE_IPV6 = True
 ENABLE_BACKUPS = False
 ENABLE_MONITORING = True
-RESIZE_DISK = False   # leave true unless you know you want to disable disk resize
+RESIZE_DISK = False
 
 # -----------------------------------------------------------------------------
 # Pulumi config (expects secrets for tokens)
