@@ -37,11 +37,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r infra/requirements.txt
 
-      - name: Authenticate to Pulumi using GitHub OIDC
-        uses: pulumi/auth-actions@v1
-        with:
-          organization: abhindev-es-gmail-com
-          export-environment-variables: true
+      - name: Pulumi Login
+        run: pulumi login
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
       - name: Select or create stack
         working-directory: infra
