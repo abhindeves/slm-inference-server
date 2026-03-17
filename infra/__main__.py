@@ -14,7 +14,7 @@ import pulumi_digitalocean as digitalocean
 # -----------------------------------------------------------------------------
 DROPLET_NAME = "pulumi-slm-droplet"
 REGION = "blr1"             # e.g., nyc3, blr1
-SIZE = "s-2vcpu-2gb"         # e.g., s-1vcpu-1gb, s-2vcpu-2gb
+SIZE = "s-2vcpu-4gb"         # e.g., s-1vcpu-1gb, s-2vcpu-2gb
 IMAGE = "ubuntu-24-04-x64"      # e.g., ubuntu-22-04-x64, docker-20-04
 TAGS = ["pulumi", "env:dev", "service:web"]
 ENABLE_IPV6 = True
@@ -44,50 +44,52 @@ MODEL_REPO = "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
 def make_user_data(hf_token: str, model_repo: str) -> str:
     return f"""#cloud-config
 runcmd:
-  - exec > /tmp/startup.log 2>&1
-  - set -x
+  - bash -c '
+      set -e
 
-  - apt update -y
-  - apt install -y docker.io python3-pip
-  - systemctl enable --now docker
+      echo "Updating system..."
+      apt update -y
 
-  - python3 -m pip install --upgrade pip
-  - python3 -m pip install huggingface-hub
+      echo "Installing dependencies..."
+      apt install -y docker.io python3-pip
 
-  # Create model directory
-  - mkdir -p /models
+      systemctl enable --now docker
 
-  # Write Python script safely
-  - |
-    cat <<EOF > /tmp/download.py
-    from huggingface_hub import snapshot_download
+      echo "Installing huggingface CLI..."
+      pip install huggingface_hub
 
-    snapshot_download(
-        repo_id="{model_repo}",
-        cache_dir="/models/model",
-        token="{hf_token}",
-        allow_patterns=["*q4_k_m.gguf"]
-    )
+      echo "Creating model directory..."
+      mkdir -p /models
 
-    print("Download complete")
-    EOF
+      echo "Logging into Hugging Face..."
+      huggingface-cli login --token "{hf_token}"
 
-  # Run download
-  - python3 /tmp/download.py
+      echo "Downloading model..."
+      huggingface-cli download {model_repo} \
+        --include "*q4_k_m.gguf" \
+        --local-dir /models/model
 
-  # Find model file
-  - MODEL_PATH=$(find /models/model -name "*.gguf" | head -n 1)
-  - echo "Model path: $MODEL_PATH"
+      echo "Listing downloaded files..."
+      ls -lh /models/model
 
-  # Run container
-  - docker pull ghcr.io/ggml-org/llama.cpp:server
-  - docker rm -f llama-server || true
-  - docker run --name llama-server --restart=always -d \
-      -v /models:/models \
-      -p 8080:8080 \
-      ghcr.io/ggml-org/llama.cpp:server \
-      -m $MODEL_PATH \
-      --host 0.0.0.0 --port 8080
+      MODEL_PATH=$(find /models/model -name "*.gguf" | head -n 1)
+
+      if [ -z "$MODEL_PATH" ]; then
+        echo "Model not found!" && exit 1
+      fi
+
+      echo "Running llama.cpp server..."
+      docker pull ghcr.io/ggml-org/llama.cpp:server
+
+      docker rm -f llama-server || true
+
+      docker run --name llama-server --restart=always -d \
+        -v /models:/models \
+        -p 8080:8080 \
+        ghcr.io/ggml-org/llama.cpp:server \
+        -m $MODEL_PATH \
+        --host 0.0.0.0 --port 8080
+    '
 """
 
 user_data = pulumi.Output.all(HUGGINGFACE_TOKEN, MODEL_REPO).apply(
