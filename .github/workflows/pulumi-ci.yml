@@ -24,18 +24,22 @@ jobs:
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
           DIGITALOCEAN_TOKEN: ${{ secrets.DO_TOKEN }}
-          
+
         run: |
+          set -e
+
+          echo "Setting up SSH key..."
+          echo "${{ secrets.SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+          echo "Selecting stack..."
           pulumi stack select dev || pulumi stack init dev
 
-          pulumi config set ssh_fingerprint ${{ secrets.SSH_FINGERPRINT }}
-
-          pulumi config set --secret private_key "$(cat <<'EOF'
-          ${{ secrets.SSH_KEY }}
-          EOF
-          )"
-
+          echo "Setting configs..."
+          pulumi config set ssh_fingerprint "${{ secrets.SSH_FINGERPRINT }}"
+          pulumi config set --secret private_key "$(cat private_key.pem)"
           pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
           pulumi config set model_repo "repo/name"
 
+          echo "Deploying..."
           pulumi up --yes
