@@ -37,7 +37,7 @@ jobs:
 
           echo "Setting configs..."
           pulumi config set ssh_fingerprint "${{ secrets.SSH_FINGERPRINT }}"
-          pulumi config set --secret private_key "$(cat private_key.pem)"
+          pulumi config set --secret private_key --path private_key.pem
           pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
           pulumi config set model_repo "repo/name"
 
