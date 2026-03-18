@@ -23,7 +23,11 @@ from huggingface_hub import snapshot_download
 snapshot_download(
     repo_id="$MODEL_REPO",
     local_dir="/root/model",
-    token="$HF_TOKEN"
+    token="$HF_TOKEN",
+    allow_patterns=["*q4_k_m.gguf"],
+    local_dir_use_symlinks=False,
+    resume_download=True,
+    max_workers=1
 )
 EOF
 
