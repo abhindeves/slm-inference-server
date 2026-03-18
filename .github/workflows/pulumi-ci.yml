@@ -29,6 +29,7 @@ jobs:
           set -e
 
           echo "Setting up SSH key..."
+          mkdir -p ~/.ssh
           printf "%s" "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
@@ -37,7 +38,7 @@ jobs:
 
           echo "Setting configs..."
           pulumi config set ssh_fingerprint "${{ secrets.SSH_FINGERPRINT }}"
-          pulumi config set --secret private_key --path private_key.pem
+          pulumi config set --secret private_key "$(cat ~/.ssh/id_rsa)"
           pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
           pulumi config set model_repo "repo/name"
 
