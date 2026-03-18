@@ -29,7 +29,7 @@ jobs:
           set -e
 
           echo "Setting up SSH key..."
-          echo "${{ secrets.SSH_KEY }}" > private_key.pem
+          printf "%s" "${{ secrets.SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
 
           echo "Selecting stack..."
