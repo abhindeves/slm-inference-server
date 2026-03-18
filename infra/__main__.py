@@ -109,7 +109,7 @@ deploy_script = pulumi.Output.all(hf_token, model_repo).apply(
 # Remote execution
 # -------------------------------
 connection = remote.ConnectionArgs(
-    host=digitalocean.Droplet.ipv4_address,
+    host=server.ipv4_address,
     user="root",
     private_key=private_key,
 )
