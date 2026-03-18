@@ -49,7 +49,7 @@ docker run -d \
   -p 8000:8000 \
   -v /root/model:/model \
   ghcr.io/ggml-org/llama.cpp:server \
-  -m /model/$MODEL_NAME.gguf \
+  -m /model/$MODEL_NAME \
   --host 0.0.0.0 --port 8000
 
 echo "Deployment complete!"
