@@ -17,7 +17,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pulumi pulumi-digitalocean pulumi-command uv
+          pip install pulumi pulumi-digitalocean pulumi-command
 
       - name: Pulumi Deploy
         working-directory: infra
@@ -33,12 +33,14 @@ jobs:
           printf "%s" "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
+          echo "Exporting private key..."
+          export PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"
+
           echo "Selecting stack..."
           pulumi stack select dev || pulumi stack init dev
 
           echo "Setting configs..."
           pulumi config set ssh_fingerprint "${{ secrets.SSH_FINGERPRINT }}"
-          pulumi config set --secret private_key "$(cat ~/.ssh/id_rsa)"
           pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
           pulumi config set model_repo "repo/name"
 
