@@ -6,13 +6,18 @@ sleep 60
 
 echo "Installing dependencies..."
 apt update -y
-apt install -y python3-pip git
+apt install -y python3-pip python3-venv git
 
-echo "Installing huggingface_hub..."
-pip3 install huggingface_hub
+echo "Creating virtual environment..."
+python3 -m venv /opt/venv
+
+echo "Activating venv and installing huggingface_hub..."
+source /opt/venv/bin/activate
+pip install --upgrade pip
+pip install huggingface_hub
 
 echo "Downloading model from Hugging Face..."
-python3 - <<EOF
+/opt/venv/bin/python - <<EOF
 from huggingface_hub import snapshot_download
 
 snapshot_download(
