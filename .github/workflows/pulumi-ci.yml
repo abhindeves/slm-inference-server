@@ -17,7 +17,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pulumi pulumi-digitalocean pulumi-command
+          pip install pulumi pulumi-digitalocean pulumi-command uv
 
       - name: Pulumi Deploy
         working-directory: infra
