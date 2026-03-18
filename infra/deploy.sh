@@ -31,17 +31,25 @@ snapshot_download(
 )
 EOF
 
+echo "Identifying the GGUF model file..."
+# This finds the first file ending in .gguf in the model directory
+MODEL_FILE=$(ls /root/model/*.gguf | head -n 1)
+
+# Get just the filename if needed, or use the full path. 
+# Inside the container, it will be at /model/$(basename $MODEL_FILE)
+MODEL_NAME=$(basename "$MODEL_FILE")
+
 echo "Pulling llama.cpp image..."
-docker pull ghcr.io/ggml-org/llama.cpp:server-b5686
+docker pull ghcr.io/ggml-org/llama.cpp:server
 
 echo "Starting model server..."
 docker run -d \
   --name llama-server \
   --restart always \
   -p 8000:8000 \
-  -v /root/model:/models \
+  -v /root/model:/model \
   ghcr.io/ggml-org/llama.cpp:server \
-  -m /models/*.gguf \
+  -m /model/$MODEL_NAME.gguf \
   --host 0.0.0.0 --port 8000
 
 echo "Deployment complete!"
