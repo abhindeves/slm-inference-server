@@ -29,8 +29,8 @@ jobs:
           set -e
 
           echo "Setting up SSH key..."
-          printf "%s" "${{ secrets.SSH_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
+          printf "%s" "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
           echo "Selecting stack..."
           pulumi stack select dev || pulumi stack init dev
