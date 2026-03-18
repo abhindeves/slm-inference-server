@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_digitalocean as digitalocean
+from pulumi_command import remote
 
 # This program provisions a DigitalOcean Droplet and configures it to run the
 # llama.cpp server with a model downloaded directly from Hugging Face.
@@ -14,7 +15,7 @@ import pulumi_digitalocean as digitalocean
 # -----------------------------------------------------------------------------
 DROPLET_NAME = "pulumi-slm-droplet"
 REGION = "blr1"             # e.g., nyc3, blr1
-SIZE = "s-2vcpu-2gb"         # e.g., s-1vcpu-1gb, s-2vcpu-2gb
+SIZE = "s-1vcpu-2gb"         # e.g., s-1vcpu-1gb, s-2vcpu-2gb
 IMAGE = "ubuntu-24-04-x64"      # e.g., ubuntu-22-04-x64, docker-20-04
 TAGS = ["pulumi", "env:dev", "service:web"]
 ENABLE_IPV6 = True
@@ -26,8 +27,11 @@ RESIZE_DISK = False
 # Pulumi config (expects secrets for tokens)
 # -----------------------------------------------------------------------------
 config = pulumi.Config()
-HUGGINGFACE_TOKEN = config.require_secret("huggingfacetoken")
-MODEL_REPO = "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+
+ssh_fingerprint = config.require("ssh_fingerprint")
+hf_token = config.require_secret("hf_token")
+model_repo = config.require("model_repo")  or "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+private_key = config.require_secret("private_key")
 
 # -----------------------------------------------------------------------------
 # Cloud-init script (runs on first boot)
@@ -41,60 +45,21 @@ MODEL_REPO = "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
 #   * The Hugging Face token is passed into the droplet via cloud-init.
 #   * `pulumi up` may take a while because the model download can be large.
 
-def make_user_data(hf_token: str, model_repo: str) -> str:
-    return f"""#cloud-config
+def make_user_data() -> str:
+    return """#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - docker.io
+
 runcmd:
-  - bash -c '
-      set -e
-
-      echo "Updating system..."
-      apt update -y
-
-      echo "Installing dependencies..."
-      apt install -y docker.io python3-pip
-
-      systemctl enable --now docker
-
-      echo "Installing huggingface CLI..."
-      pip install huggingface_hub
-
-      echo "Creating model directory..."
-      mkdir -p /models
-
-      echo "Logging into Hugging Face..."
-      huggingface-cli login --token "{hf_token}"
-
-      echo "Downloading model..."
-      huggingface-cli download {model_repo} \
-        --include "*q4_k_m.gguf" \
-        --local-dir /models/model
-
-      echo "Listing downloaded files..."
-      ls -lh /models/model
-
-      MODEL_PATH=$(find /models/model -name "*.gguf" | head -n 1)
-
-      if [ -z "$MODEL_PATH" ]; then
-        echo "Model not found!" && exit 1
-      fi
-
-      echo "Running llama.cpp server..."
-      docker pull ghcr.io/ggml-org/llama.cpp:server
-
-      docker rm -f llama-server || true
-
-      docker run --name llama-server --restart=always -d \
-        -v /models:/models \
-        -p 8080:8080 \
-        ghcr.io/ggml-org/llama.cpp:server \
-        -m $MODEL_PATH \
-        --host 0.0.0.0 --port 8080
-    '
+  - systemctl enable docker
+  - systemctl start docker
+  - usermod -aG docker ubuntu || true
 """
 
-user_data = pulumi.Output.all(HUGGINGFACE_TOKEN, MODEL_REPO).apply(
-    lambda args: make_user_data(*args)
-)
+user_data = make_user_data()
 
 # NOTE: This program assumes your DigitalOcean access token is already set in the
 # environment for the Pulumi DigitalOcean provider. Typically you run:
@@ -126,3 +91,33 @@ pulumi.export("droplet_name", server.name)
 pulumi.export("public_ipv4", server.ipv4_address)
 pulumi.export("public_ipv6", server.ipv6_address)
 pulumi.export("private_ipv4", server.ipv4_address_private)
+
+
+# -------------------------------
+# Read deployment script
+# -------------------------------
+with open("deploy.sh") as f:
+    script_content = f.read()
+
+deploy_script = pulumi.Output.all(hf_token, model_repo).apply(
+    lambda args: script_content
+    .replace("$HF_TOKEN", args[0])
+    .replace("$MODEL_REPO", args[1])
+)
+
+# -------------------------------
+# Remote execution
+# -------------------------------
+connection = remote.ConnectionArgs(
+    host=digitalocean.Droplet.ipv4_address,
+    user="root",
+    private_key=private_key,
+)
+
+deploy = remote.Command(
+    "deploy-llm",
+    connection=connection,
+    create=deploy_script,
+    opts=pulumi.ResourceOptions(depends_on=[server]),
+)
+
