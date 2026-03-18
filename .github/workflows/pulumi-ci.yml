@@ -28,7 +28,10 @@ jobs:
           pulumi stack select dev || pulumi stack init dev
 
           pulumi config set ssh_fingerprint ${{ secrets.SSH_FINGERPRINT }}
-          pulumi config set --secret private_key "${{ secrets.SSH_KEY }}"
+          pulumi config set --secret private_key "$(cat <<'EOF'
+          ${{ secrets.SSH_KEY }}
+          EOF
+          )"
           pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
           pulumi config set model_repo "repo/name"
 
