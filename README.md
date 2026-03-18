@@ -61,6 +61,7 @@ pulumi up
 ```
 ---
 
+
 ## 🔧 Customizing the model and droplet
 
 You can override the model repository and the file name that is passed to `llama.cpp` via Pulumi config:
