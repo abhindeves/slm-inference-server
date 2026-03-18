@@ -32,7 +32,7 @@ snapshot_download(
 EOF
 
 echo "Pulling llama.cpp image..."
-docker pull ghcr.io/ggerganov/llama.cpp:server
+docker pull ghcr.io/ggml-org/llama.cpp:server
 
 echo "Starting model server..."
 docker run -d \
@@ -40,7 +40,7 @@ docker run -d \
   --restart always \
   -p 8000:8000 \
   -v /root/model:/models \
-  ghcr.io/ggerganov/llama.cpp:server \
+  ghcr.io/ggml-org/llama.cpp:server \
   -m /models/*.gguf \
   --host 0.0.0.0 --port 8000
 
