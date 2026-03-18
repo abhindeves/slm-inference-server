@@ -1,35 +1,35 @@
 name: Deploy LLM Infra
 
 on:
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-steps:
-  - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-  - name: Setup Python
-    uses: actions/setup-python@v5
-    with:
-      python-version: "3.10"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-  - name: Install dependencies
-    run: |
-      pip install pulumi pulumi-digitalocean pulumi-command
+      - name: Install dependencies
+        run: |
+          pip install pulumi pulumi-digitalocean pulumi-command
 
-  - name: Pulumi Deploy
-    working-directory: infra
-    env:
-      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-      DIGITALOCEAN_TOKEN: ${{ secrets.DO_TOKEN }}
-    run: |
-      pulumi stack init dev || true
+      - name: Pulumi Deploy
+        working-directory: infra
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          DIGITALOCEAN_TOKEN: ${{ secrets.DO_TOKEN }}
+        run: |
+          pulumi stack init dev || true
 
-      pulumi config set ssh_fingerprint ${{ secrets.SSH_FINGERPRINT }}
-      pulumi config set --secret private_key "${{ secrets.SSH_KEY }}"
-      pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
-      pulumi config set model_repo "repo/name"
+          pulumi config set ssh_fingerprint ${{ secrets.SSH_FINGERPRINT }}
+          pulumi config set --secret private_key "${{ secrets.SSH_KEY }}"
+          pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
+          pulumi config set model_repo "repo/name"
 
-      pulumi up --yes
+          pulumi up --yes
