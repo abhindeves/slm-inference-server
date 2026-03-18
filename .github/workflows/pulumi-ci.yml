@@ -41,8 +41,7 @@ jobs:
 
           echo "Setting configs..."
           pulumi config set ssh_fingerprint "${{ secrets.SSH_FINGERPRINT }}"
-          pulumi config set --secret hf_token "${{ secrets.HF_TOKEN }}"
-          pulumi config set model_repo "repo/name"
+          pulumi config set --secret hf_token "${{ secrets.HUGGINGFACE_TOKEN }}"
 
           echo "Deploying..."
           pulumi up --yes
