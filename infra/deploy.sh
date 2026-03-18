@@ -32,7 +32,7 @@ snapshot_download(
 EOF
 
 echo "Pulling llama.cpp image..."
-docker pull ghcr.io/ggml-org/llama.cpp:server
+docker pull ghcr.io/ggml-org/llama.cpp:server-b5686
 
 echo "Starting model server..."
 docker run -d \
