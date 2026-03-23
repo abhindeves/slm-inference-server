@@ -1,1 +1,1 @@
-{config: {}}
+{config: {'digitalocean:token': {secure: AAABAOKemWTYHICVSse0QtQcv9UChWvl2o6CqBNqZn6UzKfUG2tjlvU3+mmaIJf5glEBvyKbAyml/eh1AMJUrU70jxadBhUfYn5EYyUXrEVFlhW8pv1ycEMTxgiW8JRCmiswDWulYg==}, 'slm-inference:ssh_fingerprint': '94:f2:b5:4a:7d:d0:20:3a:52:83:1d:bb:73:a1:7a:91', 'slm-inference:hf_token': {secure: AAABAIsaoVNFqMXeVnhfrBT1zwmraL8Tw6PA1dpbGF6XX0hB6f1jjAoe1YgNYdmhYNEZWowPwVEGalmb8gWoMvdFMQHg}}}

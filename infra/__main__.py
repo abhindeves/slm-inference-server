@@ -24,7 +24,7 @@ config = pulumi.Config()
 
 ssh_fingerprint = config.require("ssh_fingerprint")
 hf_token = config.require_secret("hf_token")
-model_repo = "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+model_repo = "unsloth/Qwen3.5-0.8B-GGUF"
 
 # ✅ Read private key from environment (NOT Pulumi config)
 private_key = os.environ["PRIVATE_KEY"]
