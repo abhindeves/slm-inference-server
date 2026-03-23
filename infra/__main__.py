@@ -7,7 +7,7 @@ from pulumi_command import remote
 # Parameters
 # -----------------------------------------------------------------------------
 DROPLET_NAME = "pulumi-slm-droplet"
-REGION = "blr1"
+REGION = "fra1"
 SIZE = "s-2vcpu-4gb"
 IMAGE = "ubuntu-24-04-x64"
 TAGS = ["pulumi", "env:dev", "service:web"]
