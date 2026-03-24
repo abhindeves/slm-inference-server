@@ -42,6 +42,9 @@ MODEL_NAME=$(basename "$MODEL_FILE")
 echo "Pulling llama.cpp image..."
 docker pull ghcr.io/ggml-org/llama.cpp:server
 
+echo "Cleaning up existing container (if any)..."
+docker rm -f llama-server || true
+
 echo "Starting model server..."
 docker run -d \
   --name llama-server \
