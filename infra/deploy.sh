@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "Waiting for instance to be ready..."
-sleep 60
+echo "Waiting for cloud-init to finish..."
+cloud-init status --wait
 
 echo "Installing dependencies..."
 apt update -y
